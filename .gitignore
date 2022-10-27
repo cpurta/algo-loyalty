@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# jetbrains ide
+.idea/
+
 # C extensions
 *.so
 
