@@ -39,3 +39,6 @@ jobs:
         ./sandbox up -v
         pytest
         ./sandbox down
+    - name: Test Example
+      run: |
+        python ./example.py
