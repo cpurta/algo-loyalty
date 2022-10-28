@@ -107,7 +107,7 @@ def setupLoyaltyOfferApp(
     """Finish setting up an offer.
     This operation funds the app offer escrow account, in one atomic
     transaction group. The offer must not have started yet.
-    The escrow account requires a total of 0.103 Algos for funding. See the code
+    The escrow account requires a total of 0.203 Algos for funding. See the code
     below for a breakdown of this amount.
     Args:
         client: An algod client.
@@ -173,6 +173,16 @@ def completeAction(client: AlgodClient, owner: Account, appID: int, actionID: in
         appID: The app ID of the auction.
         actionID: The identifier of action that was performed.
     """
+    appGlobalState = getAppGlobalState(client, appID)
+
+    rewardTokenID = appGlobalState[b"reward_asset_id"]
+
+    if any(appGlobalState[b"customer_account"]):
+        # if "bid_account" is not the zero address
+        customerAccount = encoding.encode_address(appGlobalState[b"customer_account"])
+    else:
+        customerAccount = None
+
     suggestedParams = client.suggested_params()
 
     appCallTxn = transaction.ApplicationCallTxn(
@@ -180,6 +190,8 @@ def completeAction(client: AlgodClient, owner: Account, appID: int, actionID: in
         index=appID,
         on_complete=transaction.OnComplete.NoOpOC,
         app_args=["action", actionID],
+        foreign_assets=[rewardTokenID],
+        accounts=[customerAccount] if customerAccount is not None else [],
         sp=suggestedParams,
     )
 
@@ -208,12 +220,15 @@ def closeLoyaltyOffer(client: AlgodClient, appID: int, closer: Account):
     """
     appGlobalState = getAppGlobalState(client, appID)
 
+    rewardAssetID = appGlobalState[b"reward_asset_id"]
+
     accounts: List[str] = [encoding.encode_address(appGlobalState[b"customer_account"])]
 
     deleteTxn = transaction.ApplicationDeleteTxn(
         sender=closer.getAddress(),
         index=appID,
         accounts=accounts,
+        foreign_assets=[rewardAssetID],
         sp=client.suggested_params(),
     )
     signedDeleteTxn = deleteTxn.sign(closer.getPrivateKey())

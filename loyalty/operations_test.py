@@ -151,6 +151,9 @@ def test_complete_action():
     tokenAmount = 1_000
     tokenID = createDummyAsset(client, tokenAmount, creator)
 
+    # customer opt-in to reward asset
+    optInToAsset(client, tokenID, customer)
+
     startTime = int(time()) + 10  # start time is 10 seconds in the future
     endTime = startTime + 300  # end time is 5 minutes after start
     rewardAmount = 100  # 1 reward tokens
@@ -199,13 +202,13 @@ def test_complete_action():
     assert actualState == expectedState
 
     actualAppBalances = getBalances(client, get_application_address(appID))
-    expectedAppBalances = {0: 2 * 100_000 + 1 * 1000, tokenID: 0}
+    expectedAppBalances = {0: 2 * 100_000 + 1 * 1000}
 
     assert actualAppBalances == expectedAppBalances
 
-    customerAlgoBalance = getBalances(client, customer.getAddress())[tokenID]
+    customerRewardBalance = getBalances(client, customer.getAddress())[tokenID]
 
-    assert customerAlgoBalance == rewardAmount
+    assert customerRewardBalance == rewardAmount
 
 
 def test_close_before_start():
@@ -214,9 +217,12 @@ def test_close_before_start():
     creator = getTemporaryAccount(client)
     customer = getTemporaryAccount(client)
 
+    tokenAmount = 1_000
+    tokenID = createDummyAsset(client, tokenAmount, creator)
+
     startTime = int(time()) + 5 * 60  # start time is 5 minutes in the future
     endTime = startTime + 60  # end time is 1 minute after start
-    rewardAmount = 1_000_000  # 1 Algo
+    rewardAmount = 100  # 100 reward tokens
     actionID = 101
 
     appID = createLoyaltyOfferApp(
@@ -225,6 +231,7 @@ def test_close_before_start():
         customer=customer.getAddress(),
         startTime=startTime,
         endTime=endTime,
+        rewardAssetID=tokenID,
         rewardAmount=rewardAmount,
         actionID=actionID,
     )
@@ -233,6 +240,8 @@ def test_close_before_start():
         client=client,
         appID=appID,
         funder=creator,
+        rewardAssetID=tokenID,
+        rewardAmount=rewardAmount
     )
 
     _, lastRoundTime = getLastBlockTimestamp(client)
@@ -252,9 +261,12 @@ def test_close_no_action():
     creator = getTemporaryAccount(client)
     customer = getTemporaryAccount(client)
 
+    tokenAmount = 1_000
+    tokenID = createDummyAsset(client, tokenAmount, creator)
+
     startTime = int(time()) + 10  # start time is 10 seconds in the future
     endTime = startTime + 30  # end time is 30 seconds after start
-    rewardAmount = 1_000_000  # 1 Algo
+    rewardAmount = 100  # 100 reward tokens
     actionID = 101
 
     appID = createLoyaltyOfferApp(
@@ -263,6 +275,7 @@ def test_close_no_action():
         customer=customer.getAddress(),
         startTime=startTime,
         endTime=endTime,
+        rewardAssetID=tokenID,
         rewardAmount=rewardAmount,
         actionID=actionID,
     )
@@ -271,6 +284,8 @@ def test_close_no_action():
         client=client,
         appID=appID,
         funder=creator,
+        rewardAssetID=tokenID,
+        rewardAmount=rewardAmount,
     )
 
     _, lastRoundTime = getLastBlockTimestamp(client)

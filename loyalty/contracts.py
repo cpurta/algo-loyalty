@@ -114,15 +114,27 @@ def approval_program():
     )
 
     on_delete = Seq(
-        If(Or(Global.latest_timestamp() < App.globalGet(start_time_key),
-              App.globalGet(end_time_key) <= Global.latest_timestamp())).Then(
+        If(Global.latest_timestamp() < App.globalGet(start_time_key)).Then(
             Seq(
                 # the offer has not yet started, it's ok to delete
                 Assert(
-                    # sender must either be the offer creator
+                    # sender must be the offer creator
                     Txn.sender() == Global.creator_address(),
                 ),
                 # if the offer contract still has funds, send them all to the offer creator
+                closeRewardTo(App.globalGet(reward_asset_id_key), Global.creator_address()),
+                closeAccountTo(Global.creator_address()),
+                Approve(),
+            )
+        ),
+        If(App.globalGet(end_time_key) <= Global.latest_timestamp()).Then(
+            Seq(
+                # the offer was not completed because the customer did not complete the action
+                # return the rewards back to the offer creator to be reclaimed
+                If(App.globalGet(status_key) != Int(3)).Then(
+                    closeRewardTo(App.globalGet(reward_asset_id_key), Global.creator_address())
+                ),
+                # send remaining funds to the seller
                 closeAccountTo(Global.creator_address()),
                 Approve(),
             )
