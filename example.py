@@ -23,8 +23,8 @@ def simple_loyalty_offer():
     creator = getTemporaryAccount(client)
     customer1 = getTemporaryAccount(client)
 
-    print("Bob (offer(s) creator account):", creator.getAddress())
-    print("Alice (customer1 account):", customer1.getAddress())
+    print("Bob (Offer creator account):", creator.getAddress())
+    print("Alice (member 1 account):", customer1.getAddress(), "\n")
 
     print("Bob is generating an loyalty program asset...")
     rewardAssetAmount = 1_000_000
@@ -32,11 +32,13 @@ def simple_loyalty_offer():
     print("The reward asset ID is", rewardAssetID)
     print("Bob's balances:", getBalances(client, creator.getAddress()), "\n")
 
+    print("Alice is opting into Reward asset with ID", rewardAssetID)
+    optInToAsset(client, rewardAssetID, customer1)
+
     startTime = int(time()) + 10  # start time is 10 seconds in the future
     endTime = startTime + 30  # end time is 60 seconds after start
     offer1Reward = 100  # 100 "points"
-    print("Bob is creating an offer for Alice which lasts 60 seconds to join a discord channel to receive 100 "
-          "\"points\"")
+    print("Bob is creating an offer for Alice which lasts 60 seconds")
     offer1ID = createLoyaltyOfferApp(
         client=client,
         sender=creator,
@@ -55,7 +57,7 @@ def simple_loyalty_offer():
         "\n",
     )
 
-    print("Bob is setting up and funding loyalty offers...")
+    print("Bob is setting up and funding loyalty offer...")
     setupLoyaltyOfferApp(
         client=client,
         appID=offer1ID,
@@ -74,11 +76,7 @@ def simple_loyalty_offer():
     actualAppBalancesBefore = getBalances(client, get_application_address(offer1ID))
     print("Offer escrow balances:", actualAppBalancesBefore, "\n")
 
-    print("Alice is opting into Reward asset with ID", rewardAssetID)
-
-    optInToAsset(client, rewardAssetID, customer1)
-
-    print("Alice is completing the offer action (joining Discord channel)...")
+    print("Alice is completing the offer action...")
 
     completeAction(client=client, owner=creator, appID=offer1ID, actionID=1010)
 
@@ -99,11 +97,11 @@ def simple_loyalty_offer():
     assert actualAppBalances == expectedAppBalances
 
     customerPointsBalance = getBalances(client, customer1.getAddress())[rewardAssetID]
-    print("Alice's reward balance after completing the offer: {}", customerPointsBalance)
+    print("Alice's reward balance after completing the offer: {} points\n".format(customerPointsBalance))
     assert customerPointsBalance == offer1Reward
 
     creatorRewardBalance = getBalances(client, creator.getAddress())[rewardAssetID]
-    print("Bob's reward balance after sending reward to Alice: {}", creatorRewardBalance)
+    print("Bob's reward balance after sending reward to Alice: {} points\n".format(creatorRewardBalance))
     assert creatorRewardBalance == rewardAssetAmount - offer1Reward
 
 
