@@ -64,3 +64,7 @@ accomplish. This could be connecting to 3rd party APIs or connecting to a Databa
 action manager determines that the correct action has been accomplished it can then call the
 "completeAction" contract application call to complete the offer and pay out the reward to 
 the loyalty member.
+
+## LICENSE
+
+MIT
